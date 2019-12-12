@@ -8,8 +8,10 @@ module Report
 
     def create_report
       count_orphan = 0
+      hot_star_temp = 0
+      planet_identifier = ''
+
       planets = {}
-      hot_stars = []
 
       data = JSON.parse(`curl https://gist.githubusercontent.com/joelbirchler/66cf8045fcbb6515557347c05d789b4a/raw/9a196385b44d4288431eef74896c0512bad3defe/exoplanets`)
 
@@ -20,9 +22,9 @@ module Report
         count_orphan = count_orphan + 1 if planet['TypeFlag'] == 3
 
         # Planet orbiting the hottest star - check HostStarTempK
-        unless planet['HostStarTempK'].to_i == 0
-          planets[planet['HostStarTempK'].to_i] = planet['PlanetIdentifier']
-          hot_stars << planet['HostStarTempK'].to_i
+        if hot_star_temp < planet['HostStarTempK'].to_i
+          hot_star_temp = planet['HostStarTempK'].to_i
+          planet_identifier = planet['PlanetIdentifier']
         end
 
         next if planet['RadiusJpt'].to_f == 0 || planet['DiscoveryYear'].to_i == 0
@@ -40,7 +42,7 @@ module Report
       end
 
       @report_data['count_orphan'] = count_orphan
-      @report_data['hot_star'] = planets[hot_stars.max]
+      @report_data['hot_star'] = planet_identifier
 
       display_report
     end
